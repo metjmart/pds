@@ -1,0 +1,235 @@
+
+Time-Varying Point-Downscaling Code and Instructions
+for WRF 4.2
+
+
+by Dave Nolan and Matt Onderlinde
+
+Code to make nudging files was created by Craig Mattocks.
+
+This code was davanced to WRF 4.2.1 by James Hlywiak
+
+December 2020
+
+This README provides instructions for code that allows the
+user to create homogeneous but time-varying environments 
+around idealized tropical cyclones. Such simulations are
+described in the publication by Onderlinde and Nolan (2017, J. 
+Adv. Model. Earth Syst.) 
+
+Before giving explicit instructions, it will help to explain
+what we are going to do. These codes allow you to combine the
+"Four-Dimensional-Data-Assimilation," or nudging feature of 
+WRF with idealized simulations. We will build wrffdda_d01 files
+from wrfinput_d01 files and then turn on nudging in WRF. Even 
+though it was not designed to do this in idealized simulations,
+it works.
+
+There is one extra trick required: for the pert-Coriolis option
+that we use for PDS, the code has to me modified to account for
+the fact that the reference state is varying in time. This is 
+the main TVPDS modification to the WRF code.
+
+
+1) Code Installation
+
+As you did before for PDS, copy each of the codes in each
+of the dyn_em, main, frame, and share directories that have
+the extension .tvpds into the same source directories
+of your WRF code. Make copies of the originals, then replace
+each code with its namesake with the .tvpds extension.
+
+Return to the top WRF directory and do
+
+./compile em_quarter_ss >& compile.tvpds &
+
+If the code compiles successfully, then proceed.
+
+2) Nudging code
+
+cp the TVPDS/nudge directory into your run directory. Go
+into /nudge, and do:
+
+./build_nudge.bash
+
+which make will make some code that assembles the nudging files.
+
+
+3) Doing TVPDS
+
+Consider this standard case of increasing shear on a hurricane: the environment
+has 5 m/s of wind shear for 48 hours, then over 48 hours it increases
+to 15 m/s, and then it remains at 15 m/s for another 48 hours.
+First, we will use the codes in the "init" directory (that you hopefully 
+already learned how to use) to make the initial condition, which
+is a balanced vortex embedded in mean flow and shear. Then, we will
+eliminate the vortex, and make another initial condition (wrfinput_d01)
+with 5 m/s shear but no vortex and no random noise to initiate
+convection. Then we will make another no-vortex, no-noise wrfinput_d01 file
+with 15 m/s of shear. We will use these two files to make 4
+reference states: low shear, low shear, high shear, high shear.
+
+The code in the "nudge" directory will make these into a wrffdda_d01
+file that linearly interpolates between each state. Between the second
+and third states, the shear will be increasing.
+
+3a) First, make a standard wrfinput_d01 file with the initial wind
+shear (5 m/s) and a balanced vortex. To do this, edit the files
+in the init director, run shg, move the input_sounding(_o/_u/_v) files
+into the run directory, and run ideal.exe.
+
+Move the wrfinput_d01 file into a different name, e.g.:
+
+mv wrfinput_d01 wrfinput_d01_vortex
+
+
+Now, go back to the init directory and edit sheargeneric.f to elimiate
+the perturbations:
+
+!         real :: noiseAmp = 0.5          ! some parameters for adding noise to initial winds
+         real :: noiseAmp = 0.0          ! some parameters for adding noise to initial winds
+
+and edit makevtbar.f to zero out the vortex:
+
+!              Vmax = 20.0 * 1.09     ! Adjust upward because of smoothing
+              Vmax = 0.0 * 1.09     ! Adjust upward because of smoothing
+
+Do "make" and run shg again. Move input_sounding files to the run
+directory and do ideal.exe.
+
+Now we have a wrfinput file with 5 m/s of shear. Make two copies:
+
+mv wrfinput_d01 wrfinput_d01_t1
+cp wrfinput_d01_t1 wrfinput_d01_t2
+
+
+Now go back to init and change makeuofyz.f:
+
+!         real, parameter :: shear =      5.
+         real, parameter :: shear =      15.
+
+make, run shg, and then move input_sounding files to the run directory.
+Then run ideal.exe. Now you have the second background state. As
+above, do:
+
+mv wrfinput_d01 wrfinput_d01_t3
+cp wrfinput_d01_t3 wrfinput_d01_t4
+
+
+3b) Move the wrfinput_d01_t* files into the nudge
+directory. Go into that directory and do this command
+which will build the nudging (wrffdda) file:
+
+./nudge.bash wrfinput_d01_t1 wrfinput_d01_t2 wrfinput_d01_t3 wrfinput_d01_t4 2880
+
+which should create a file called wrffdda_d01.
+
+Note the number 2880 at the end. This is the time in minutes
+between the nudging files (here 2 days). This same number must
+appear in the fdda section of the namelist.input file (more below). 
+
+Move the wrfdda_d01 file up into the run directory. Change into
+that directory and put the wrfinput file with the vortex back
+into place:
+
+mv wrfinput_d01_vortex wrfinput_d01
+
+
+3c) Now copy the file TVPDS/namelist/namelist.input.tvpds into the
+namelist.input file in your run directory. In the last line of the
+first section of the namelist ("&time_control") you will see this flag:
+
+ force_use_old_data                  = .true.
+
+(If you don't have this flag, you will get an error that tells you to
+add this flag.) The other difference with the PDS namelist is the 
+addition of this section:
+
+ &fdda
+ grid_fdda                           =   1,    0,    0,    ** nudge on d01 only!
+ gfdda_inname                        = "wrffdda_d01",
+ gfdda_end_h                         = 480,  480,  480,    ** just make sure this is longer than your run
+ gfdda_interval_m                    = 2880, 2880, 2880,   ** the interval between nudginf files
+ fgdt                                =   0,    0,    0,    ** leave as 0
+ if_no_pbl_nudging_uv                =   0,    0,    0,    ** you can not nudge in the BL, but don't do that
+ if_no_pbl_nudging_t                 =   0,    0,    0,    ** all these relate to BL option
+ if_no_pbl_nudging_q                 =   0,    0,    0,             |
+ if_zfac_uv                          =   0,    0,    0,		    |
+ k_zfac_uv                           =  10,   10,   10,		    |
+ if_zfac_t                           =   0,    0,    0,		    |
+ k_zfac_t                            =  10,   10,   10,	            |
+ if_zfac_q                           =   0,    0,    0,	            |
+ k_zfac_q                            =  10,   10,   10,             *
+ guv                                 = 0.0000462962, 0.0000462962, 0.0000462962, ** inverse of the forcing
+ gt                                  = 0.0000462962, 0.0000462962, 0.0000462962, ** time scale, 6 h in this
+ gq                                  = 0.0000462962, 0.0000462962, 0.0000462962, ** case
+ if_ramping                          = 0,                  ** don't use
+ dtramp_min                          = 60.0,
+ io_form_gfdda                       = 2,
+ /
+ 
+So the two important numbers here are the time interval in
+minutes between nudging files (here 2 days), and the forcing
+amplitude which is the inverse of the relaxation time scale
+(here 1/0.0000462962 = 21600 s = 6 hours). Longer relaxation
+times will let the shear vary more smoothly in time, but then
+the shear will not follow the prescribed time variations
+as closely [see Onderlinde and Nolan (2017) for discussion].
+
+
+3d) Now, with the wrfinput_d01 and wrffdda_d01 files in place,
+and the namelist as above, you can run your test case. It should
+simulate a TC that intensifies quickly while the shear is low but
+them steadily weakens as the shear increases and then levels off 
+at 15 m/s.
+
+
+4) Hybrid Option: Real-Shear with Nudging.
+
+It is also possible to use the nudging in conjunction with the
+"real-shear" (shear balanced by temperature gradients) option.
+This is useful if you want to do simulations with realistic meridional
+temperature gradients [although, as described in Nolan (2011, JAMES),
+this can cause other complications], and you want to keep the large-scale
+shear and soundings roughly constant in time. 
+
+To do this, first replace your wrf.exe code with one that was generated
+without the TVPDS modifications. Next, make changes to the namelist.
+First, turn off the pert-Coriolis option:
+
+ pert_coriolis                       = .false., .false., .false.,
+
+Then, change the boundary conditions to be consistent with the 
+"real shear" namelist:
+
+ periodic_x                          = .true.,.false.,.false.,
+ symmetric_xs                        = .false.,.false.,.false.,
+ symmetric_xe                        = .false.,.false.,.false.,
+ open_xs                             = .false., .false.,.false.,
+ open_xe                             = .false., .false.,.false.,
+ periodic_y                          = .false.,.false.,.false.,
+ symmetric_ys                        = .true.,.false.,.false.,
+ symmetric_ye                        = .true.,.false.,.false.,
+
+
+Next, re-create all your wrfinput and wrffdda files, but using the
+real-shear option in the init codes. This will build temperature
+gradients into the fields that balance the mean flow and shear.
+
+
+5) Remember Your Changes
+
+Remember when you go back to initialize a different vortex and/or
+shear, you need to change the vortex strength back from zero and
+you need to add back the random noise perturbations. Keeping the changes
+to the code and the various wrfinput files straight is probably
+the trickiest part of using TVPDS.
+
+
+
+Good luck!
+
+Dave Nolan
+Matt Onderlinde
+
+

@@ -1,0 +1,138 @@
+
+
+WRF Generic Vortex in Shear Initialization README file.
+
+Revised by Dave Nolan 10/23/2017, with contributions to the code from
+Matt Onderlinde and Craig Mattocks.
+
+
+The code does essentially four things:
+
+1) It generates, on an axisymmetric grid, a wind field that looks like
+a tropical cyclone, and the pressure and temperature fields that hold
+this vortex in hydrostatic and gradient wind balance.
+
+2) A mean zonal background flow U(y,z) can be prescribed.  If you are
+using the balanced shear option (hereafter referred to as "real shear"),
+the temperature and pressure anomalies, relative to a specified sounding
+are computed that would hold this wind flow in geostrophic and hydrostatic
+balance.  If you are using the "point-downscaling" option (more below),
+then a single sounding is prescribed everywhere across the domain.
+
+3) The axisymmetric fields are interpolated onto a 3D cartesian grid
+in height coordinates. The axisymmetric wind fields are added to the
+background wind fields, while the axisymmetric temperature and pressure
+anomalies are recast as perturbations from a basic state, and then these
+perturbations are added to the background temperature and pressure fields.
+
+4) The fields are then written to a file which has a format specified in
+the end of the sheargeneric.f code. This format was created by Shu-hua
+Chen of UC Davis, and it can be read into a modified version of the 3D
+supercell idealized WRF case.
+
+To make it work, you compile the code using "make" (which uses "Makefile",
+and may need to be adjusted to your computer and compiler). Then you
+run it using "shg".
+
+To get a sense of the inputs that you can control, look at the long list
+of parameters that are defined near the top of the program sheargeneric.f.
+
+
+The Test Case:
+
+The code it set up to initialize a test case, which is a weak, low-level,
+tropical-storm like vortex that is embedded in 5 m/s of easterly flow
+with 5 m/s of westerly shear on top of it. The code is set to work with
+the point-downscaling option (wind shear without temperature gradient,
+doubly-periodic boundary conditions).  This vortex should move to the
+west, develop convection, and intensify into a hurricane in a few days.
+
+
+The Vortex:
+
+The code creates the initial wind field based on the formula of a
+"modified Rankine vortex," where you can specify the size, strength, and
+decay rate of the wind field. It currently creates a vortex with RMW of
+90km, Vmax 20 m/s, and decay rate a = 0.4. After a day or so the vortex
+will adjust to some smaller, more intense structure. Note that the decay
+rate of the initial wind field has a large influence on the future size
+of the inner core wind field, with broader initial wind fields (lower a)
+leading to larger storms.
+
+Alternatively, the radial structure of the vortex can be defined by the
+initial vorticity profile of the surface wind field, which is defined
+in smoothvort.f.  In this case, the surface wind profile is created in
+makevtbar.f by radially integrating this vorticity profile.
+
+The wind profile is extended into the vertical by the subroutine
+makevtofrz.f. These are just simple analytical functions which make the
+vortex decay with height in a somewhat realistic way. There is also
+a line which allows you to "cut off" the wind field so that it goes
+quickly to zero beyond some radius (rcut).
+
+The initial background sounding is now defined in a file called
+"sounding.input". You can see some versions of these in the directory
+"Soundings/". Wind profiles are also in the sounding files, and they
+can be used, or replaced with idealized with profiles (more below).
+
+Then the code finds the pressure and temperature fields through an
+iterative approach: p(r,z) is found by integrating the gradient wind
+equation inward from the outer boundary; then the hydrostatic equation
+is enforced at each grid point by modifying the temperature. By repeating
+these steps, the solution converges quite quickly.
+
+I've also left copies of other initialization codes that I have used in
+the past.  They are the "cat1," "cat3," and "gaussian" vortices from the
+paper Nolan and Montgomery (2002), Also present is the hurricane-like
+vortex used in the study of wavenumber-one instabilities in the paper
+Nolan et al. (2001), indicated by the appendage "waveone."
+
+The location of the initial vortex on the outer grid is set in the
+variables ivort and jvort.
+
+Note that you can only specify the vortex on the resolution of the
+outermost WRF grid. Therefore, it is best to set the size of the vortex
+(the radius of maximum winds) as a multiple of the grid spacing. In
+this test case, the grid size is 18 km, so the RMW should be 54, or 72,
+or 90 km, etc.
+
+
+The Background Flow:
+
+A new option is the ability to read in the wind profiles from a file. In
+fact, this is the default: The reference sounding T(z) and q(z) are
+defined in a file "sounding.input", along with the wind profiles U(z)
+and V(z). However, you can choose an option to replace the U and V
+data with idealized profiles from functions in the code. To do this,
+set idealwinds=1.  Note that idealized U(z) is defined in makeuofyz.f,
+while V(z) is defined within the main program sheargeneric.f.
+
+If you look at the flags at the top of the program sheargeneric.f, you
+will see that there are several ways you can handle the background flow
+and/or wind shear.  If you do not use the point-downscaling technique, the
+code will compute the T(y,z) and P(y,z) that hold U(y,z) in balance. If
+you do use point downscaling, this will be ignored and the sounding will
+be the same across the domain.
+
+In this case, however, you must use the "pert_Corilois" = true option
+in the WRF namelist. Doubly periodic boundary conditions (periodic in
+y as well as x) must also be used.
+
+For balanced shear cases, you must use pert_Coriolis = false and
+periodic_y = false, symmetric_ys = true, symmetric_ye = true (on outermost
+domain). Note also you cannot have any mean meridional flow with real
+shear, i.e., V(z) must be zero.
+
+When using real shear, you can also choose the f-plane or the beta-plane.
+Make sure not to use beta-plane with point-downscaling.
+
+After using "make" to compile, the executable is "shg".
+
+Almost every variable for the axisymmetric vortex and the balanced
+shear flow are now written to files in ASCII format, (e.g., tofrz.out,
+rhofyz.out) so that you can read them into Matlab or IDR and look at
+them easily.
+
+After running "shg", move all 4 "input_sounding" files into the directory
+where you will run ideal.exe and wrf.exe.
+

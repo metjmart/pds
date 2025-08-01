@@ -1,0 +1,51 @@
+!     This subroutine integrates the vorticity to find
+!     the azimuthal velocity field as a function of r
+!     The result comes back in the vector vtbar
+!     the r locations are assumed to be at 0,1*dr,2*dr,....(nr-1)*dr
+
+      subroutine makevtbar(vtbar, nr, dr)
+
+         implicit none
+
+!        This is the refinement parameter, to increase accuracy
+!        in the integration, if desired
+         integer, parameter :: refine = 4
+
+         integer, intent(in) :: nr
+         real   , intent(in) :: dr
+
+         real, dimension (nr), intent(out) :: vtbar
+
+         real :: ri,rim1, rvi,rvim1, dr2
+         integer :: i,j
+         real, external :: smoothvort
+
+         vtbar(1) = 0.
+
+         dr2 = dr / refine
+
+!        Here we loop over the full gridpoints
+         do i=2,nr
+
+            rvim1 = (i-1) * dr * vtbar(i-1)
+
+!           This is the circulation at the beginning of the interval:
+            rvi = rvim1
+
+!           Here we loop more times according to the refinement
+            do j=1,refine
+               rim1 = (i-1)*dr + (j-1)*dr2
+               ri   = (i-1)*dr + (j  )*dr2
+
+!              The answer accumulates in rvi:
+               rvi = rvi + .5 * dr2 * (rim1 * smoothvort(rim1)
+     &                                +ri   * smoothvort(ri  ))
+            end do
+
+!           Then we get back the new velocity at the end of the interval
+            vtbar(i) = rvi / (i*dr)
+
+         end do
+
+         return
+      end

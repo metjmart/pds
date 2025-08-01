@@ -1,0 +1,63 @@
+
+This modified version of module_quarter_ss.F also contains code that
+makes it possible to read in the vertical levels from a file.
+
+Here you can see some changes to the code:
+
+! Dave Nolan: remember "false" here means not stretched in eta (WRF coordinates)
+!   stretch_grid = .true.
+   stretch_grid = .false.
+   manual_grid = .false.
+
+and later:
+
+! Dave Nolan/Stefan:
+   IF (manual_grid) THEN
+    print *,'MANUALLY SPECIFYING ZNW NOW'
+    open(unit=13,file='grd',form='formatted',status='old')
+   DO k=1, kde
+     read(13,*) grid%znw(k)
+     print *,'full level value = ',grid%znw(k)
+    ENDDO
+    close(unit=13)
+
+
+So, if you want to read the vertical levels in from a file,
+change the code to say manual_grid = .true., then re-compile.
+
+"grd" should be a text file containing one vertical level (eta)
+value on each line from 1 to 0. For example, here is a file
+for 26 vertical levels (which means 25 half-levels):
+
+   1.0000000e+00
+   9.7999390e-01
+   9.5982015e-01
+   9.3817711e-01
+   9.1049230e-01
+   8.6928314e-01
+   8.1049230e-01
+   7.3817711e-01
+   6.5982062e-01
+   5.8003089e-01
+   5.0059036e-01
+   4.2416380e-01
+   3.5679175e-01
+   3.0479175e-01
+   2.6816380e-01
+   2.4059036e-01
+   2.1603699e-01
+   1.9200047e-01
+   1.6800000e-01
+   1.4400000e-01
+   1.2000000e-01
+   9.6000000e-02
+   7.2000000e-02
+   4.8000000e-02
+   2.4000000e-02
+   0.0000000e+00
+
+
+Our thanks to Stefan Tulich for original installing this code.
+
+
+

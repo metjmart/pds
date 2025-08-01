@@ -1,0 +1,21 @@
+
+	function smoothvort(r)
+
+	real :: smoothvort
+	real :: r
+
+	real :: zetamax, width
+
+c	This version of smoothvort generates a monopolar vorticity 
+c	distribution
+
+        zetamax = 0.0015
+        width = 45000
+
+        smoothvort = zetamax*exp( - (r/width)**2 )
+
+	return
+	end
+
+
+

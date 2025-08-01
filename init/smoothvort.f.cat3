@@ -1,0 +1,77 @@
+
+c	This function returns a smoothed vorticity field based upon
+c	the construction used by Schubert, et. al. (1999) and
+c	Nolan and Montgomery (2003)
+
+	function smoothvort(r)
+
+	real :: smoothvort
+	real :: r
+
+	real :: r1,r2,r3,d1,d2,d3,zeta1,zeta2,zeta3,zetaave
+	real :: delta,gamma, hermite3
+
+	external hermite3
+
+c	All the parameter values must be defined here:
+
+c	zeta1, zeta2, zetaave, delta, r1, r2, and gamma are based directly
+c	on section 2 of Schubert, et al., (1999)
+c	r3 and zeta3 are arbitrary
+
+	delta=0.6
+	gamma=0.1
+	zetaave=0.0035
+	r1=20000
+	zeta3=zetaave/20.0
+
+	d1=5000
+	d2=5000
+	d3=60000
+
+	r2=r1/delta
+	r3=120000
+
+	zeta1=-zetaave*(1.0-gamma)/(1.0-delta*delta)
+	
+	zeta2=zetaave*(1.0-gamma*delta*delta)/(1.0-delta*delta)
+
+	if (r.lt.(r1-d1)) then
+	  
+	  smoothvort=zeta1+zeta2
+
+	else if (r.lt.(r1+d1)) then
+
+	  smoothvort=(zeta1+zeta2)*hermite3((r - r1 + d1)/(2.0*d1)) +
+     &			zeta2*hermite3((r1 + d1 - r)/(2.0*d1))
+
+	else if (r.lt.(r2-d2)) then
+
+	  smoothvort=zeta2
+
+	else if (r.lt.(r2+d2)) then
+
+	  smoothvort=zeta2*hermite3((r - r2 + d2)/(2.0*d2)) +
+     &			zeta3*hermite3((r2 + d2 -r)/(2.0*d2))
+	
+	else if (r.lt.(r3-d3)) then
+
+	  smoothvort=zeta3
+
+	else if (r.lt.(r3+d3)) then
+
+	  smoothvort=zeta3*hermite3((r - r3 + d3)/(2.0*d3))
+
+	else
+	
+	  smoothvort=0.0
+	
+	end if
+
+	return
+	end
+
+
+
+		 
+

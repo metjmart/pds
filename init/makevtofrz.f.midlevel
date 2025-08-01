@@ -1,0 +1,49 @@
+
+	subroutine makevofrz(vofrz,vbar,z,nr,nz,dr,f)
+
+	integer :: nr,nz
+	real, dimension(nr,nz) :: vofrz
+	real, dimension(nr) :: vbar
+	real, dimension(nz) :: z
+	real :: dr,f
+
+	integer :: i,j
+	real :: ztop,zhere,fac,r,Lz,alpha,zmax,Lzup,Lzdown
+        
+        Lzdown = 3175.0
+        Lzup = 3175.00
+        alpha = 2.0
+        zmax = 3720.0
+!        zmax = 1500.0
+
+
+	call makevbar(vbar,nr,dr)
+
+	do j=1,nz
+
+	  zhere=z(j)
+
+	  do i=1,nr
+	 
+	    r=i*dr
+
+            if (zhere.gt.zmax) then
+              Lz=Lzup
+            else
+              Lz=Lzdown
+            endif
+
+            fac = exp( -((zhere-zmax)**alpha)/(alpha*Lz**alpha) )
+
+ 	    fac=fac*exp( -(r/600000)**4.0 )
+
+	    vofrz(i,j) = fac*vbar(i)
+
+	  end do
+	end do  
+
+	return
+	end	  
+
+
+

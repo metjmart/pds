@@ -1,0 +1,3 @@
+#! /bin/bash
+
+rm *.o *.out input_so* shg

@@ -1,0 +1,42 @@
+! Matt Onderlinde Sep, 2013
+! Add nudge base profile variables to solve_em() subroutine
+SUBROUTINE solve_em      ( grid , config_flags ,     &
+                           uold_base,                &
+                           vold_base,                &
+                           told_base,                &
+                           qold_base,                &
+                           unew_base,                &
+                           vnew_base,                &
+                           tnew_base,                &
+                           qnew_base,                &
+                           nudge_indicator,          &
+                           d01_gfdda_interval_m      &
+!
+#include <dummy_new_args.inc>
+!
+                 )
+
+   USE module_domain
+   USE module_configure
+   USE module_driver_constants
+
+   !  Input data.
+   TYPE(domain) , INTENT(INOUT)                  :: grid
+   TYPE (grid_config_rec_type) , INTENT(IN)      :: config_flags
+
+   ! Matt Onderlinde Sep, 2013
+   ! Introduce variables for u_base, v_base, t_base, qv_base based on the nudging input
+   REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: uold_base
+   REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: vold_base
+   REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: told_base
+   REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: qold_base
+   REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: unew_base
+   REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: vnew_base
+   REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: tnew_base
+   REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: qnew_base
+   INTEGER, INTENT(IN) :: nudge_indicator, d01_gfdda_interval_m
+
+#include <dummy_new_decl.inc>
+
+END SUBROUTINE solve_em
+

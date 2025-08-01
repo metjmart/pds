@@ -1,0 +1,56 @@
+
+	subroutine makevofrz(vofrz,vbar,z,nr,nz,dr,f)
+
+	integer :: nr,nz
+	real, dimension(nr,nz) :: vofrz
+	real, dimension(nr) :: vbar
+	real, dimension(nz) :: z
+	real :: dr,f
+
+	integer :: i,j
+	real :: ztop,zhere,fac,gamma,r
+
+	gamma=1.0
+
+	ztop = 14000
+
+	call makevbar(vbar,nr,dr)
+
+	do j=1,nz
+
+	  zhere=z(j)
+
+	  do i=1,nr
+	 
+	    r=i*dr
+
+	
+c	  Include next line for vertically aligned profile
+	    gamma=0.0
+
+
+	    fac = exp(-((1.7*abs(zhere)/ztop)**2.0)) * 
+     &		(1.0 - gamma*exp(-((r/(15000 + 3.0*abs(zhere))))**2.7))
+
+c	  if lowest level is below the ground, choose fac so 
+c	  that velocity field is correct at the surface 
+c	  by linear interpolation.
+	    if (zhere.lt.0.0) then
+              fac = 2.0 - fac	
+	    end if
+
+c	    if (zhere.gt.ztop) fac=0.0
+
+c	  Include next line to make barotropic vortex
+c	    fac=1.0
+
+	    vofrz(i,j) = fac*vbar(i)
+
+	  end do
+	end do  
+
+	return
+	end	  
+
+
+

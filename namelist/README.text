@@ -1,0 +1,17 @@
+
+
+The namelists here are set up to run with the test case that has been
+programmed into the sheargeneric.f code in the init directory.
+
+In the directory where you run WRF, replace the namelist.input file that
+comes with the em_quarter_ss test case with one of the two namelists
+here. This test case simulates an example of TC intensification using a
+180x180 outer domain with 18km resolution and a single second grid,
+120x120 with 6km resolution. You can change max_dom = 3 to run with a
+third nest with 2km resolution.
+
+The only differences between the two namelists are the setting of
+pert_coriolis = true and using peridioc boundary conditions in the
+meridional direction for the point-downscaling case.
+
+

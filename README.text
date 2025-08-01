@@ -1,0 +1,73 @@
+
+
+The Generic Vortex/Point-Downscaling Initialization for WRF
+
+by Dave Nolan
+
+with help over the years from Shu-hua Chen, Craig Mattocks, Matt Onderlinde,
+and James Hlywiak
+
+
+Updated December 2020 for WRF Version 4.2.1
+
+
+The code in these directories contain the modifications needed to
+simulate an idealized moving hurricane in WRF4.2.1. You can use this
+code to perform simulations with mean flow and/or wind shear balanced
+by temperature gradients, or using the "point-downscaling" technique of
+Nolan (2011, J. Adv. Model. Earth Syst.).
+
+This code contains a test case that is explained further in the "init"
+directory in (6) below. You should be able to easily build your own
+initial conditions from the test case.
+
+Note that this updated code also contains files and instructions
+for doing Time-Varying Point Downscaling (TVPDS). This framework
+is included as an add-on to PDS. The codes and a separate README
+file are in the TVPDS directory. You should install, test, and understand
+PDS before moving on to TVPDS.
+
+For PDS, I suggest the following steps:
+
+1) Copy the files in each of the share, phys, dyn_em, and Registry
+directories into the WRF directories of the same name. Make copies of
+the original files, and then copy these modified versions into their
+namesake files.
+
+In previous versions of this system, it was required to modify the WRF
+code itself on a case-by-case basis in order to do simulations with
+"point downscaling" which is the same as "Coriolis force acting on the
+perturbation winds." However, this trick is now available in WRF as a
+run-time option in the namelist.input file.
+
+2) Use "clean -a" to erase all compiled code, then do "configure".
+If you plan to use moving nests, choose the option to do so.
+
+3) Compile WRF. (You need to recompile from scratch if you want to
+incorporate my recommended changes to the Registry files.)
+
+4) Copy the contents of the WRF run directory into the place you want
+to run WRF. Then copy the provided namelist.input files in the namelist
+directory into the same directory.
+
+5) Make copies or links of main/ideal.exe and main/wrf.exe in your
+run directory.
+
+6) Go into the init directory, read the README file, compile the code
+and run.
+
+7) Move the four input_sounding files into your run directory.
+
+8) Run ideal.exe to make the wrfinput_d01 from the input_sounding files.
+You may want to examine the wrfinput_d01 to see if it looks right.
+
+9) Run WRF.
+
+10) Examine output in netcdf format.
+
+
+Good luck!
+
+Dave Nolan
+
+
