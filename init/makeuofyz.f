@@ -20,14 +20,17 @@
          real, parameter :: metersPerDegree = 111317.1
          real, parameter :: d = 2.5
 
+         ! parameters for piecewise zonal cosine shear profile
+         real, parameter :: pb = 85000. ! bottom of shear transition zone (Pa)
+         real, parameter :: pt = 20000. ! top of shear transition zone (Pa)
+         real, parameter :: surf  = -2 
+         real, parameter :: shear = 3
+!         real, parameter :: shear = 15
+
+         ! parameters for Gaussian shaped jet
          real, parameter :: zcen  =  10000.
          real, parameter :: sy    = 500000.
          real, parameter :: sz    =   5000.
-
-         real, parameter :: surf  = -5 
-         real, parameter :: shear = 5
-!         real, parameter :: shear = 15
-
          real :: ycen
 
          pi = 2. * asin(1.)
@@ -46,14 +49,14 @@
 
 !              Formula for cosine shear; must add v in sheargeneric.f
 !              if you want idealized meridional wind
-               x = 1.592 * (4.929 - log10(p))
-              if (p > 85000.) then
-                 uofyz(j,k) = surf
-              else if (p < 20000.) then
-                 uofyz(j,k) = surf + shear
-              else
-                 uofyz(j,k) = surf + .5 * shear * (1. - cos(pi*x))
-              end if
+               x = log10(pb/p) / log10(pb/pt)
+               if (p >= pb) then
+                  uofyz(j,k) = surf
+               else if (p < pt) then
+                  uofyz(j,k) = surf + shear
+               else
+                  uofyz(j,k) = surf + .5 * shear * (1. - cos(pi*x))
+               end if
 
 !              Here is a Gaussian-shaped jet:
 !              uofyz(j,k) = 20. * exp( -((yloc-ycen)/sy)**2.
