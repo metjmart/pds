@@ -37,9 +37,9 @@
               Lz=Lzdown
             endif
 
-            fac = exp( -((zhere-zmax)**alpha)/(alpha*Lz**alpha) )
+            fac = exp( -(abs(zhere-zmax)**alpha)/(alpha * Lz**alpha) )
 
-             fac=fac*exp( -(r/rcut)**4.0 )
+            fac=fac*exp( -(r/rcut)**4.0 )
 
             vtofrz(i,j) = fac*vtbar(i)
 
