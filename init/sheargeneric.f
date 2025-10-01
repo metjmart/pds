@@ -78,16 +78,16 @@
          real, external :: t2th
 
 !        Here define values for input variables
-         integer :: nx = 181             ! size of WRF domain
-         integer :: ny = 181             ! size of WRF domain
+         integer :: nx = 361             ! size of WRF domain
+         integer :: ny = 361             ! size of WRF domain
          real :: cen_lat = 20.           ! lat at center of domain
          real :: cen_lon = -60.          ! lon at center of domain
          real :: p0 = 101500.0           ! reference surface pressure
-         integer :: iVort = 121          ! grid location of initial vortex
-         integer :: jVort =  90          ! grid location of initial vortex
+         integer :: iVort = 180          ! grid location of initial vortex
+         integer :: jVort = 180          ! grid location of initial vortex
          real :: dx = 18000.             ! WRF domain grid spacing
          real :: dy = 18000.             ! WRF domain grid spacing
-         real :: zTop = 22000.           ! top of this domain, should be a bit higher than WRF
+         real :: zTop = 26000.           ! top of this domain, should be a bit higher than WRF
          real :: dr = 4000.              ! radial spacing for axisymmetric vortex
          integer :: nr = 401             ! radial grid size for vortex
          integer :: nz = 89              ! vertical grid size for data set 
