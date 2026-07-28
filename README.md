@@ -1,4 +1,9 @@
+# PDS and TPVDS with WRF
 
+Source code provided by Dave Nolan and modified by Jonathan Martinez
+- See git log for reference to modifications from JM
+
+## Original README
 
 The Generic Vortex/Point-Downscaling Initialization for WRF
 
@@ -8,7 +13,7 @@ with help over the years from Shu-hua Chen, Craig Mattocks, Matt Onderlinde,
 and James Hlywiak
 
 
-Updated April 2026 for WRF Version 4.6 as modified by Jonathan Martinez
+Updated April 2026 for WRF Version 4.6.1 as modified by Jonathan Martinez
 
 
 The code in these directories contain the modifications needed to
