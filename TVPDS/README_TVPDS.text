@@ -1,15 +1,17 @@
 
 Time-Varying Point-Downscaling Code and Instructions
-for WRF 4.2
+for WRF 4.6.1
 
 
 by Dave Nolan and Matt Onderlinde
 
 Code to make nudging files was created by Craig Mattocks.
 
-This code was davanced to WRF 4.2.1 by James Hlywiak
+This code was advanced to WRF 4.6.1 by Jonathan Martinez
 
-December 2020
+Updated April 2026
+
+
 
 This README provides instructions for code that allows the
 user to create homogeneous but time-varying environments 
