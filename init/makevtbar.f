@@ -24,7 +24,7 @@
                                                   ! interations
 
               Rmw = 90000.0
-              Vmax = 20.0 * 1.09     ! Adjust upward because of smoothing
+              Vmax = 15.0 * 1.09     ! Adjust upward because of smoothing
 !             Vmax = 0.0 * 1.09     ! for TVPDS env sounding
 
          print *, 'In makevtbar.f, Vmax = ' , Vmax
