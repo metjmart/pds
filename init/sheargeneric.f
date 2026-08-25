@@ -104,6 +104,39 @@
          integer :: datalength = 14      ! length of the input sounding data
          integer :: idealwinds = 1       ! for defining idealized wind profiles; over-writes data
 
+         ! default moisture perturbation settings -> override with perturbations.nml
+         logical :: add_qperts = .false. ! add moisture perturbations to output?
+         integer :: qp_seed = 1010101    ! reproducible moisture perturbation seed
+         real :: qp_halfwidth = 360000.  ! half-width of box for moisture perturbations
+         real :: qp_maxheight = 1500.    ! max height of moisture perturbations
+         real :: qp_amp = 0.0005         ! amplitude of moisture perturbations
+
+         integer :: nmlStatus
+
+         namelist /moisture_perturbations/ add_qperts, qp_seed,
+     &              qp_halfwidth, qp_maxheight, qp_amp
+
+         open(unit=91, file='perturbations.nml',
+     &        status='old', action='read', iostat=nmlStatus)
+         if (nmlStatus .ne. 0) then
+            print *, 'ERROR: cannot open perturbations.nml'
+            stop 1
+         end if
+
+         read(91, nml=moisture_perturbations, iostat=nmlStatus)
+         close(91)
+         if (nmlStatus .ne. 0) then
+            print *, 'ERROR: cannot read moisture namelist'
+            stop 1
+         end if
+
+         print *, 'Moisture perturbation settings:'
+         print *, 'add_qperts = ', add_qperts
+         print *, 'qp_seed = ', qp_seed
+         print *, 'qp_halfwidth = ', qp_halfwidth
+         print *, 'qp_maxheight = ', qp_maxheight
+         print *, 'qp_amp = ', qp_amp
+
          truelat1 = cen_lat  ! historical
          truelat2 = cen_lat  ! historical
          ix = nx  ! Dimensions of WRF input data
@@ -662,10 +695,10 @@
      &                            pofrz,vtofrz,tofrz,z,nr,nz,dr)
 
                   u(i,j,k) = u(i,j,k) + xvel
-                  
+
                   call RANDOM_SEED()
                   call RANDOM_NUMBER(rand)
-                  
+
                      u(i,j,k) = u(i,j,k) + (rand-.5) * noiseAmp *
      &                       exp( -((r - noiseRad)/noiseWidth)**2. )*
      &                       exp( - (2.*zLoc/10000)**3. )
@@ -698,6 +731,34 @@
 
             end do
          end do
+
+!        *************************************************************
+!        add moisture perturbations?
+
+         if (add_qperts) then
+
+            call set_random_seed(qp_seed)
+
+            do j=1,jx-1
+               do i=1,ix-1
+                  xLoc = dx * (i - iVort)
+                  yLoc = dy * (j - jVort)
+                  if ((abs(xLoc) .le. qp_halfwidth) .and.
+     &                (abs(yLoc) .le. qp_halfwidth)) then
+                     do k=1,kx-1
+                        zLoc = zetaHalf(k)
+                        if (zLoc .le. qp_maxheight) then
+                           call random_number(rand)
+                           q(i,j,k) = q(i,j,k)
+     &                                + qp_amp * (2. * rand - 1.)
+                        endif
+                     enddo
+                  endif
+               enddo
+            enddo
+
+         endif
+
 
 !        *************************************************************
 
@@ -795,4 +856,30 @@
 !        return
 !        end
 
+
+      subroutine set_random_seed(seed_value)
+         use iso_fortran_env, only: int64
+         implicit none
+
+         integer, intent(in) :: seed_value
+         integer :: n, i
+         integer, allocatable :: seed(:)
+         integer(int64) :: state
+         integer(int64), parameter :: modulus = 2147483647_int64
+
+         call random_seed(size=n)
+         allocate(seed(n))
+
+         ! create deterministic random state from user-defined seed
+         state = modulo(int(seed_value, int64), modulus)
+         if (state == 0) state = 1
+
+         do i = 1, n
+            state = modulo(48271_int64*state, modulus)
+            seed(i) = int(state)
+         end do
+
+         call random_seed(put=seed)
+         deallocate(seed)
+      end subroutine set_random_seed
 

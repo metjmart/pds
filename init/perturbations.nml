@@ -1,0 +1,7 @@
+&moisture_perturbations
+   add_qperts    = .true.
+   qp_seed       = 1010101
+   qp_halfwidth  = 360000.0
+   qp_maxheight  = 1500.0
+   qp_amp        = 0.0005
+/
