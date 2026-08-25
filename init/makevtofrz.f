@@ -13,9 +13,9 @@
         real :: ztop,zhere,fac,r,Lz
         real :: alpha,zmax,Lzup,Lzdown,rcut
         
-        Lzdown = 3175.0     ! length scale of decay downward
-        Lzup = 1.5*3175.0   ! length scale of decay upward
-        alpha = 2.0         ! exponent for Gaussian-like decay
+        Lzdown = 2500.0     ! length scale of decay downward
+        Lzup = 3500         ! length scale of decay upward
+        alpha = 1.8         ! exponent for Gaussian-like decay
         zmax = 1500.0       ! level of max winds
 
         rcut = 600000.0     ! radius that winds are forced to zero
