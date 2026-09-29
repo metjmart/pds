@@ -70,6 +70,7 @@
          real    :: dLat, dLon, eval, fval, dZeta
          real    :: tDelta, x, rhfac
          real :: r, rand
+         real :: rhmax, q_s
 
          real, external :: getrh
          real, external :: getq
@@ -93,8 +94,8 @@
          integer :: nz = 89              ! vertical grid size for data set 
          integer :: ispds = 1            ! set to one for point-downscaling
          integer :: betaPlane = 0        ! set to one for beta plane (real-shear only)
-         real :: noiseAmp = 0.5          ! some parameters for adding noise to initial winds
-!        real :: noiseAmp = 0.0          ! for TVPDS env soundings
+!        real :: noiseAmp = 0.5          ! some parameters for adding noise to initial winds
+         real :: noiseAmp = 0.0          ! for TVPDS env soundings
          real :: noiseRad = 100000.      ! central radius of annulus of noise
          real :: noiseWidth = 30000.     ! width of annulus of noise
          integer :: adjQ = 0             ! set to one to adjust RH to constant across domain
@@ -582,6 +583,8 @@
 !        First we will loop over all points to fill in the balanced shear
 !        flow; we will put the vortex in afterwards with its own ix,jx,kx loops
 
+         rhmax = 0.
+
          do j=1,jx-1
             jp1 = min(j+1, jx)
             do i=1,ix
@@ -605,6 +608,10 @@
 
                   u(i,j,k) = .25 * ( uofyz(j,k  ) + uofyz(jp1,k  )
      &                             + uofyz(j,k+1) + uofyz(jp1,k+1) )
+
+
+                  q_s = getq(t(i,j,k), p(i,j,k), 100.)
+                  rhmax = max(rhmax, q(i,j,k) / q_s)
 
 !              Putting in meridional wind: It cannot vary spatially.
 !              Either use vsound from file, or idealized or nothing.
@@ -636,6 +643,9 @@
 
               end do
            end do
+
+!        check max RH after adding the vortex
+         write (*, '(a,f8.4)') 'max RH after vortex = ', rhmax
 
 !        Now, add the vortex wind fields and temperature
 !        and pressure perturbations
@@ -737,6 +747,8 @@
 
          if (add_qperts) then
 
+            rhmax = 0.
+
             call set_random_seed(qp_seed)
 
             do j=1,jx-1
@@ -751,11 +763,16 @@
                            call random_number(rand)
                            q(i,j,k) = q(i,j,k)
      &                                + qp_amp * (2. * rand - 1.)
+                           q_s = getq(t(i,j,k), p(i,j,k), 100.)
+                           rhmax = max(rhmax, q(i,j,k) / q_s)
                         endif
                      enddo
                   endif
                enddo
             enddo
+
+!           check RH after adding qperts
+            write (*, '(a,f8.4)') 'max RH after qperts = ', rhmax
 
          endif
 
